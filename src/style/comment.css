@@ -1,0 +1,53 @@
+ul {
+  width: 100%;
+}
+
+button {
+  background-color: transparent;
+  outline: none;
+  border: none;
+  padding-right: 1rem;
+}
+#user-img {
+  height: 2rem;
+}
+.comment-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 55%;
+  margin: auto;
+}
+.comment-card-li {
+  background-color: bisque;
+  margin: 1rem;
+  padding: 2rem;
+  border-left: 3px solid blueviolet;
+  border-radius: 0.5rem;
+}
+.user-name {
+  color: rgb(105, 0, 204);
+  font-size: 1.3rem;
+}
+.comment-message {
+  font-size: 1rem;
+  margin-bottom: 0.4rem;
+}
+.comment-detail {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-left: 1rem;
+}
+.comment-detail-header {
+  margin-bottom: 0.3rem;
+}
+.comment-detail span {
+  margin: 0 1rem 0 0;
+}
+.inline {
+  display: flex;
+}
+.date-time {
+  color: grey;
+}
