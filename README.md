@@ -6,8 +6,9 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 In the project directory, you can run:
 
-<!-- ### `Project`
-![Screenshot](./) -->
+### `Project`
+
+![Image](https://github.com/Puja-Sh/nested-comment-react/blob/main/src/image/project.jpg)
 
 ### `npm start`
 
