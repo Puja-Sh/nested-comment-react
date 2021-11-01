@@ -15,23 +15,28 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 55%;
+  width: 100%;
   margin: auto;
 }
 .comment-card-li {
   background-color: bisque;
-  margin: 1rem;
-  padding: 2rem;
+  padding: 1rem;
   border-left: 3px solid blueviolet;
   border-radius: 0.5rem;
+  width: 70%;
+  margin: 1rem auto;
+  box-shadow: inset 2px 3px 10px rgba(119, 119, 119, 0.322);
 }
 .user-name {
   color: rgb(105, 0, 204);
-  font-size: 1.3rem;
+  font-size: 1rem;
 }
 .comment-message {
-  font-size: 1rem;
+  font-size: 0.8rem;
   margin-bottom: 0.4rem;
+}
+.user-name-btn {
+  border-bottom: 1px solid blueviolet;
 }
 .comment-detail {
   display: flex;
