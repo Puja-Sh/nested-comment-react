@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import "../style/comment.css";
 
@@ -7,7 +7,7 @@ import CommentCard from "./CommentCard";
 import NewComment from "./NewComment";
 
 const Comments = (props) => {
-  const [commentsList, setCommentsList] = useState([
+  const commentsList = useRef([
     {
       id: "01",
       parentId: null,
@@ -116,12 +116,12 @@ const Comments = (props) => {
 
   // rootComment are which has parentId == NULL
   const rootComments = useMemo(() => (
-    commentsList.filter((comment) => !comment.parentId)
+    commentsList.current.filter((comment) => !comment.parentId)
   ), [commentsList])
 
   const [reply, setReply] = useState("");
   const [id, setId] = useState(null);
-  const [likedCommentsIds, setLikedCommentsIds] = useState([]) // State that holds comments that user liked
+  const likedCommentsIds = useRef([]) // State that holds comments that user liked
 
   ////////////
   // HANDLERS
@@ -129,50 +129,33 @@ const Comments = (props) => {
 
   // Handle adding new commment
   const addNewComment = useCallback((name, commentMessage, userId) => {
-    setCommentsList((oldCommentsList) => ([
-      ...oldCommentsList,
-      {
-        id: uuidv4().slice("-", 5),
-        parentId: userId,
-        userName: name,
-        comment: commentMessage,
-        like: 0,
-        time: new Date().getTime(),
-        date: new Date().toLocaleDateString(),
-        displayTime: new Date().toLocaleTimeString(),
-        delete: true,
-        editable: true,
-      }
-    ]))
+    commentsList.current.push({
+      id: uuidv4().slice("-", 5),
+      parentId: userId,
+      userName: name,
+      comment: commentMessage,
+      like: 0,
+      time: new Date().getTime(),
+      date: new Date().toLocaleDateString(),
+      displayTime: new Date().toLocaleTimeString(),
+      delete: true,
+      editable: true,
+    })
   }, [])
 
   // Like handler
   const likeHandler = useCallback((id) => {
-    setCommentsList((oldCommentsList) => (
-      oldCommentsList.map((oldComment) => {
-        if (oldComment.id !== id) { // If not the target comment, do no like manipulation
-          return oldComment
-        } else {
-          if (likedCommentsIds.includes(id)) { // If user has previously liked the comment
-            // Remove the comment id from liked comments ids
-            setLikedCommentsIds((oldLikedCommentsIds) => {
-              const oldLikedCommentsIdsClone = [...oldLikedCommentsIds]
-              oldLikedCommentsIdsClone.splice(oldLikedCommentsIdsClone.indexOf(id), 1)
-              return oldLikedCommentsIdsClone
-            })
-            // Decrease like count
-            return { ...oldComment, like: oldComment.like - 1 }
-          } else { // If user has not liked the comment already
-            // Add the comment id to liked comments ids
-            setLikedCommentsIds((oldLikedCommentsIds) => (
-              [...oldLikedCommentsIds, id]
-            ))
-            // Increase like count
-            return { ...oldComment, like: oldComment.like + 1 }
-          }
-        }
-      })
-    ))
+    if (likedCommentsIds.current.includes(id)) { // If user has previously liked the comment
+      // Remove the comment id from liked comments ids
+      likedCommentsIds.current.splice(likedCommentsIds.current.indexOf(id), 1)
+      // Decrease like count
+      commentsList.current.filter((comment) => (comment.id === id))[0].like -= 1
+    } else { // If user has not liked the comment already
+      // Add the comment id to liked comments ids
+      likedCommentsIds.current.push(id)
+      // Increase like count
+      commentsList.current.filter((comment) => (comment.id === id))[0].like += 1
+    }
   }, [likedCommentsIds])
 
   // Handles delete
@@ -181,16 +164,14 @@ const Comments = (props) => {
       "Are you sure you want to delete your comment?"
     )
     if (deleteConfirmation) {
-      setCommentsList((oldCommentsList) => (
-        oldCommentsList.filter((comment, i) => (
-          i !== index ? comment : null
-        ))
+      commentsList.current = commentsList.current.filter((comment, i) => (
+        i !== index ? comment : null
       ))
     }
   }, [])
 
   const userNameHandler = useCallback((name, id) => {
-    let replyTo = commentsList.filter((comment) => comment.id === id);
+    let replyTo = commentsList.current.filter((comment) => comment.id === id);
     let userId = id;
     if (replyTo) {
       setReply(name);
@@ -200,7 +181,7 @@ const Comments = (props) => {
 
   // Function that gets replies to any comment
   const getReplies = useCallback((commentId) => {
-    let result = commentsList.filter((comment) => comment.parentId === commentId);
+    let result = commentsList.current.filter((comment) => comment.parentId === commentId);
     return result;
   }, [commentsList])
 
