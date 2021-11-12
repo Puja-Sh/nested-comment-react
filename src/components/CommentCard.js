@@ -86,11 +86,10 @@ const CommentCard = ({
             </div>
           </div>
           {replies.length > 0
-            ? replies.map((reply) => (
-                <div>
+            ? replies.map((reply, index) => (
+                <div key={index}>
                   <CommentCard
                     rootComment={reply}
-                    key={reply.id}
                     replies={[]}
                     likeHandler={likeHandler}
                     deleteComment={deleteComment}
