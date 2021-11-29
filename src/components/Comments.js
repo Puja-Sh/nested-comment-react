@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useState, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import "../style/comment.css";
 
@@ -7,8 +7,7 @@ import CommentCard from "./CommentCard";
 import NewComment from "./NewComment";
 
 const Comments = (props) => {
-  const [liking, setLiking] = useState(false);
-  const [comment, setComment] = useState([
+  const commentsList = useRef([
     {
       id: "01",
       parentId: null,
@@ -113,78 +112,79 @@ const Comments = (props) => {
       delete: false,
       editable: false,
     },
-  ]);
+  ].sort((a, b) => (a.time < b.time ? 1 : -1)))
 
-  // Adding new comment handling and sorting
-  comment.sort((a, b) => (a.time < b.time ? 1 : -1));
-  const addNewComment = (name, commentMessage, userId) => {
-    const newComment = [
-      ...comment,
-      {
-        id: uuidv4().slice("-", 5),
-        parentId: userId,
-        userName: name,
-        comment: commentMessage,
-        like: 0,
-        time: new Date().getTime(),
-        date: new Date().toLocaleDateString(),
-        displayTime: new Date().toLocaleTimeString(),
-        delete: true,
-        editable: true,
-      },
-    ];
-    setComment(newComment);
-  };
-
-  // Like handler
-  const likeHandler = (id) => {
-    let liked = comment.filter((comment) => comment.id === id);
-
-    if (liking === false) {
-      liked.map((like, index) => (liked[index].like = like.like + 1));
-
-      const updatedLike = [...comment];
-      setComment(updatedLike);
-      setLiking(true);
-    } else if (liking === true) {
-      liked.map((unlike, index) => (liked[index].like = unlike.like - 1));
-
-      const updateLike = [...comment];
-      setComment(updateLike);
-      setLiking(false);
-    }
-  };
-
-  // delete Handling
-  const deleteComment = (index) => {
-    const UpdatedComment = [...comment];
-    let deleteConfirmation = confirm(
-      "Are you sure you want to delete your comment?"
-    );
-    if (deleteConfirmation) {
-      UpdatedComment.splice(index, 1);
-      setComment(UpdatedComment);
-    } else {
-      return;
-    }
-  };
   // rootComment are which has parentId == NULL
-  const rootComment = comment.filter((comment) => comment.parentId === null);
+  const rootComments = useMemo(() => (
+    commentsList.current.filter((comment) => !comment.parentId)
+  ), [commentsList])
 
-  const getReplies = (commentId) => {
-    let result = comment.filter((comment) => comment.parentId === commentId);
-    return result;
-  };
   const [reply, setReply] = useState("");
   const [id, setId] = useState(null);
-  const userNameHandler = (name, id) => {
-    let replyTo = comment.filter((comment) => comment.id === id);
+  const likedCommentsIds = useRef([]) // State that holds comments that user liked
+
+  ////////////
+  // HANDLERS
+  ////////////
+
+  // Handle adding new commment
+  const addNewComment = useCallback((name, commentMessage, userId) => {
+    commentsList.current.push({
+      id: uuidv4().slice("-", 5),
+      parentId: userId,
+      userName: name,
+      comment: commentMessage,
+      like: 0,
+      time: new Date().getTime(),
+      date: new Date().toLocaleDateString(),
+      displayTime: new Date().toLocaleTimeString(),
+      delete: true,
+      editable: true,
+    })
+  }, [])
+
+  // Like handler
+  const likeHandler = useCallback((id) => {
+    if (likedCommentsIds.current.includes(id)) { // If user has previously liked the comment
+      // Remove the comment id from liked comments ids
+      likedCommentsIds.current.splice(likedCommentsIds.current.indexOf(id), 1)
+      // Decrease like count
+      commentsList.current.filter((comment) => (comment.id === id))[0].like -= 1
+    } else { // If user has not liked the comment already
+      // Add the comment id to liked comments ids
+      likedCommentsIds.current.push(id)
+      // Increase like count
+      commentsList.current.filter((comment) => (comment.id === id))[0].like += 1
+    }
+  }, [likedCommentsIds])
+
+  // Handles delete
+  const deleteComment = useCallback((index) => {
+    let deleteConfirmation = confirm(
+      "Are you sure you want to delete your comment?"
+    )
+    if (deleteConfirmation) {
+      commentsList.current = commentsList.current.filter((comment, i) => (
+        i !== index ? comment : null
+      ))
+    }
+  }, [])
+
+  const userNameHandler = useCallback((name, id) => {
+    let replyTo = commentsList.current.filter((comment) => comment.id === id);
     let userId = id;
     if (replyTo) {
       setReply(name);
       setId(userId);
     }
-  };
+  }, [commentsList])
+
+  // Function that gets replies to any comment
+  const getReplies = useCallback((commentId) => {
+    let result = commentsList.current.filter((comment) => comment.parentId === commentId);
+    return result;
+  }, [commentsList])
+
   return (
     <div>
       <NewComment
@@ -194,14 +194,14 @@ const Comments = (props) => {
         userId={id}
       />
 
-      {rootComment.map((root) => (
+      {rootComments.map((root, index) => (
         <CommentCard
-          key={root.id}
           rootComment={root}
           likeHandler={likeHandler}
           deleteComment={deleteComment}
           replies={getReplies(root.id)}
           userNameHandler={userNameHandler}
+          key={index}
         />
       ))}
     </div>
